@@ -53,8 +53,10 @@ func actionList(root *Action) []*Action {
 }
 
 // do runs the action graph rooted at root.
+// 进行具体的 编译工作
 func (b *Builder) Do(root *Action) {
 	if c := cache.Default(); c != nil && !b.ComputeStaleOnly {
+		// 预留清理工作
 		// If we're doing real work, take time at the end to trim the cache.
 		defer c.Trim()
 	}
@@ -70,6 +72,10 @@ func (b *Builder) Do(root *Action) {
 	// ensure that, all else being equal, the execution prefers
 	// to do what it would have done first in a simple depth-first
 	// dependency order traversal.
+	// 构建所有操作的列表，分配深度优先的后订单优先级。
+	// 这里最初的实现是一个真正的队列（使用一个通道），但是它的作用是通过低级别的叶动作分散注意力，从而不利于完成更高级别的操作。
+	// 工作的顺序对整个执行时间并不重要，但是当运行“GO测试STD”时，很快就可以看到每一个测试结果。
+	// 所分配的优先级确保，在所有相同的情况下，执行优先于在简单的深度优先依赖顺序遍历中完成它所做的事情。
 	all := actionList(root)
 	for i, a := range all {
 		a.priority = i
@@ -143,6 +149,7 @@ func (b *Builder) Do(root *Action) {
 	// If we are using the -n flag (just printing commands)
 	// drop the parallelism to 1, both to make the output
 	// deterministic and because there is no real work anyway.
+	// 多线程同步编译
 	par := cfg.BuildP
 	if cfg.BuildN {
 		par = 1

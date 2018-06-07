@@ -15,7 +15,9 @@ import (
 	"path/filepath"
 )
 
+// 初始化
 func BuildInit() {
+
 	instrumentInit()
 	buildModeInit()
 

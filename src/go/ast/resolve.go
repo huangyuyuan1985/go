@@ -26,6 +26,7 @@ func (p *pkgBuilder) errorf(pos token.Pos, format string, args ...interface{}) {
 	p.error(pos, fmt.Sprintf(format, args...))
 }
 
+// 声明，
 func (p *pkgBuilder) declare(scope, altScope *Scope, obj *Object) {
 	alt := scope.Insert(obj)
 	if alt == nil && altScope != nil {

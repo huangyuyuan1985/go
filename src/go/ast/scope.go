@@ -15,7 +15,7 @@ import (
 // A Scope maintains the set of named language entities declared
 // in the scope and a link to the immediately surrounding (outer)
 // scope.
-//
+// scope 范围。
 type Scope struct {
 	Outer   *Scope
 	Objects map[string]*Object
@@ -144,6 +144,7 @@ const (
 	Typ                // type
 	Var                // variable
 	Fun                // function or method
+	// 代码块
 	Lbl                // label
 )
 

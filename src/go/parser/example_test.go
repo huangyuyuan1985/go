@@ -25,6 +25,7 @@ func bar() {
 }`
 
 	// Parse src but stop after processing the imports.
+	//f, err := parser.ParseFile(fset, "", src, parser.ImportsOnly)
 	f, err := parser.ParseFile(fset, "", src, parser.ImportsOnly)
 	if err != nil {
 		fmt.Println(err)
@@ -41,3 +42,4 @@ func bar() {
 	// "fmt"
 	// "time"
 }
+

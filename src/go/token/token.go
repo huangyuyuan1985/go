@@ -10,6 +10,7 @@ package token
 import "strconv"
 
 // Token is the set of lexical tokens of the Go programming language.
+// Token 是golang 的词汇表
 type Token int
 
 // The list of tokens.
@@ -19,10 +20,11 @@ const (
 	EOF
 	COMMENT
 
+
 	literal_beg
 	// Identifiers and basic type literals
 	// (these tokens stand for classes of literals)
-	IDENT  // main
+	IDENT  // main, 函数名称，识别
 	INT    // 12345
 	FLOAT  // 123.45
 	IMAG   // 123.45i
@@ -235,6 +237,7 @@ func (tok Token) String() string {
 		s = tokens[tok]
 	}
 	if s == "" {
+		// token(333)
 		s = "token(" + strconv.Itoa(int(tok)) + ")"
 	}
 	return s
@@ -256,19 +259,26 @@ const (
 // operator op. If op is not a binary operator, the result
 // is LowestPrecedence.
 //
+// 优先度,数值越大，优先度越高
 func (op Token) Precedence() int {
 	switch op {
+	// or ||
 	case LOR:
 		return 1
+		// and
 	case LAND:
 		return 2
+		// 等于==, !=, <, <=, >, >=
 	case EQL, NEQ, LSS, LEQ, GTR, GEQ:
 		return 3
+		// + , -, |, ^
 	case ADD, SUB, OR, XOR:
 		return 4
+		// *, /, %, <<, >>, &&, &^
 	case MUL, QUO, REM, SHL, SHR, AND, AND_NOT:
 		return 5
 	}
+	// 0
 	return LowestPrec
 }
 

@@ -67,6 +67,7 @@ func init() {
 	}
 }
 
+// 入口函数
 func main() {
 	_ = go11tag
 	flag.Usage = base.Usage
@@ -128,6 +129,7 @@ func main() {
 		}
 	}
 
+	// 遍历
 	for _, cmd := range base.Commands {
 		if cmd.Name() == args[0] && cmd.Runnable() {
 			cmd.Flag.Usage = func() { cmd.Usage() }

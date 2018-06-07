@@ -272,11 +272,13 @@ var pkgsFilter = func(pkgs []*load.Package) []*load.Package { return pkgs }
 
 var runtimeVersion = runtime.Version()
 
+// 两个参数，第一个参数是 调用者， 第二个参数是 命令行传入的参数
 func runBuild(cmd *base.Command, args []string) {
 	BuildInit()
 	var b Builder
 	b.Init()
 
+	// 加载 源码
 	pkgs := load.PackagesForBuild(args)
 
 	if len(pkgs) == 1 && pkgs[0].Name == "main" && cfg.BuildO == "" {
@@ -333,6 +335,7 @@ func runBuild(cmd *base.Command, args []string) {
 	if cfg.BuildBuildmode == "shared" {
 		a = b.buildmodeShared(ModeBuild, depMode, args, pkgs, a)
 	}
+	// 具体的编译操作
 	b.Do(a)
 }
 

@@ -66,20 +66,26 @@ type parser struct {
 
 	// Label scopes
 	// (maintained by open/close LabelScope)
+	// 标签范围
 	labelScope  *ast.Scope     // label scope for current function
 	targetStack [][]*ast.Ident // stack of unresolved labels
 }
 
+/**
+fset 用来记录关联的信息
+ */
 func (p *parser) init(fset *token.FileSet, filename string, src []byte, mode Mode) {
 	p.file = fset.AddFile(filename, -1, len(src))
 	var m scanner.Mode
 	if mode&ParseComments != 0 {
 		m = scanner.ScanComments
 	}
+	// error handler
 	eh := func(pos token.Position, msg string) { p.errors.Add(pos, msg) }
 	p.scanner.Init(p.file, src, eh, m)
 
 	p.mode = mode
+	//
 	p.trace = mode&Trace != 0 // for convenience (p.trace is used frequently)
 
 	p.next()
@@ -237,6 +243,7 @@ func un(p *parser) {
 }
 
 // Advance to the next token.
+// 获取下一个 token
 func (p *parser) next0() {
 	// Because of one-token look-ahead, print the previous token
 	// when tracing as it provides a more readable output. The
@@ -253,7 +260,7 @@ func (p *parser) next0() {
 			p.printTrace(s)
 		}
 	}
-
+	//获取下一个 token
 	p.pos, p.tok, p.lit = p.scanner.Scan()
 }
 
@@ -313,6 +320,17 @@ func (p *parser) consumeCommentGroup(n int) (comments *ast.CommentGroup, endline
 // Lead and line comments may be considered documentation that is
 // stored in the AST.
 //
+/**
+ 提前两个非反应在下一个令牌。在收集过程中，任何encountered鸭群，记得穿铅和负载和线路的评论。
+
+a comment中铅是一个集团，开始和结束的线，没有任何其他标记和随后的城市这是一个非评论令牌在线路上的集团在立即的评论。
+
+在线评论（comment集团，是一个非follows a comment令牌在相同的线，和标记后，已没有网络，网络在线路上的前端。
+
+和在线评论可能被使用的这是仓库的AST。
+
+/ /
+ */
 func (p *parser) next() {
 	p.leadComment = nil
 	p.lineComment = nil
@@ -530,7 +548,7 @@ func (p *parser) safePos(pos token.Pos) (res token.Pos) {
 
 // ----------------------------------------------------------------------------
 // Identifiers
-
+// 标识符
 func (p *parser) parseIdent() *ast.Ident {
 	pos := p.pos
 	name := "_"
@@ -1512,7 +1530,7 @@ L:
 
 	return x
 }
-
+// 分解一元表达式
 // If lhs is set and the result is an identifier, it is not resolved.
 func (p *parser) parseUnaryExpr(lhs bool) ast.Expr {
 	if p.trace {
@@ -1520,12 +1538,15 @@ func (p *parser) parseUnaryExpr(lhs bool) ast.Expr {
 	}
 
 	switch p.tok {
+	// + - ! ^ &
 	case token.ADD, token.SUB, token.NOT, token.XOR, token.AND:
 		pos, op := p.pos, p.tok
 		p.next()
 		x := p.parseUnaryExpr(false)
+		// 返回 一元操作符
 		return &ast.UnaryExpr{OpPos: pos, Op: op, X: p.checkExpr(x)}
 
+		// 箭头 <-
 	case token.ARROW:
 		// channel type or receive expression
 		arrow := p.pos
@@ -1545,9 +1566,12 @@ func (p *parser) parseUnaryExpr(lhs bool) ast.Expr {
 		//   <- (chan type)    =>  (<-chan type)
 		//   <- (chan<- type)  =>  (<-chan (<-type))
 
+		//
 		x := p.parseUnaryExpr(false)
 
+		// 决定
 		// determine which case we have
+		//
 		if typ, ok := x.(*ast.ChanType); ok {
 			// (<-type)
 
@@ -1574,6 +1598,7 @@ func (p *parser) parseUnaryExpr(lhs bool) ast.Expr {
 
 	case token.MUL:
 		// pointer type or unary "*" expression
+// 指针
 		pos := p.pos
 		p.next()
 		x := p.parseUnaryExpr(false)
@@ -1588,27 +1613,39 @@ func (p *parser) tokPrec() (token.Token, int) {
 	if p.inRhs && tok == token.ASSIGN {
 		tok = token.EQL
 	}
+	// 返回 token 和 token 优先级
 	return tok, tok.Precedence()
 }
 
 // If lhs is set and the result is an identifier, it is not resolved.
+// 解析 二元表达式
 func (p *parser) parseBinaryExpr(lhs bool, prec1 int) ast.Expr {
 	if p.trace {
 		defer un(trace(p, "BinaryExpr"))
 	}
 
+	// Unary 一元
+	// 先取一个左边的操作符
 	x := p.parseUnaryExpr(lhs)
 	for {
+		// 优先度
 		op, oprec := p.tokPrec()
+		// 当前 的操作符 优先度比 上一个底，那么就返回
+		//
 		if oprec < prec1 {
 			return x
 		}
+
+
 		pos := p.expect(op)
 		if lhs {
 			p.resolve(x)
 			lhs = false
 		}
+		// Binary 二元
+		//
 		y := p.parseBinaryExpr(false, oprec+1)
+		// 二元
 		x = &ast.BinaryExpr{X: p.checkExpr(x), OpPos: pos, Op: op, Y: p.checkExpr(y)}
 	}
 }
@@ -1618,10 +1655,12 @@ func (p *parser) parseBinaryExpr(lhs bool, prec1 int) ast.Expr {
 // check the result (using checkExpr or checkExprOrType), depending on
 // context.
 func (p *parser) parseExpr(lhs bool) ast.Expr {
+	//
 	if p.trace {
 		defer un(trace(p, "Expression"))
 	}
 
+	//
 	return p.parseBinaryExpr(lhs, token.LowestPrec+1)
 }
 
@@ -1633,10 +1672,14 @@ func (p *parser) parseRhs() ast.Expr {
 	return x
 }
 
+//
 func (p *parser) parseRhsOrType() ast.Expr {
 	old := p.inRhs
 	p.inRhs = true
+
+	//
 	x := p.checkExprOrType(p.parseExpr(false))
+
 	p.inRhs = old
 	return x
 }
@@ -2496,7 +2539,9 @@ func (p *parser) parseDecl(sync map[token.Token]bool) ast.Decl {
 
 // ----------------------------------------------------------------------------
 // Source files
-
+/**
+ 根据token 列表，解析 ast
+ */
 func (p *parser) parseFile() *ast.File {
 	if p.trace {
 		defer un(trace(p, "File"))
@@ -2511,8 +2556,11 @@ func (p *parser) parseFile() *ast.File {
 	// package clause
 	doc := p.leadComment
 	pos := p.expect(token.PACKAGE)
+	// package 从句 不是一个声明
+	// package 名称没有出现在任何范围内
 	// Go spec: The package clause is not a declaration;
 	// the package name does not appear in any scope.
+	//
 	ident := p.parseIdent()
 	if ident.Name == "_" && p.mode&DeclarationErrors != 0 {
 		p.error(p.pos, "invalid package name _")
@@ -2527,6 +2575,7 @@ func (p *parser) parseFile() *ast.File {
 
 	p.openScope()
 	p.pkgScope = p.topScope
+	// 表达式列表
 	var decls []ast.Decl
 	if p.mode&PackageClauseOnly == 0 {
 		// import decls
@@ -2549,6 +2598,7 @@ func (p *parser) parseFile() *ast.File {
 	i := 0
 	for _, ident := range p.unresolved {
 		// i <= index for current ident
+		// 对象已经分解
 		assert(ident.Obj == unresolved, "object already resolved")
 		ident.Obj = p.pkgScope.Lookup(ident.Name) // also removes unresolved sentinel
 		if ident.Obj == nil {
@@ -2557,6 +2607,7 @@ func (p *parser) parseFile() *ast.File {
 		}
 	}
 
+	// 返回 &ast.File
 	return &ast.File{
 		Doc:        doc,
 		Package:    pos,

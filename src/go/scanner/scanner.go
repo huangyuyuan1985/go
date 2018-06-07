@@ -38,11 +38,12 @@ type Scanner struct {
 	mode Mode         // scanning mode
 
 	// scanning state
+	// rune int32
 	ch         rune // current character
 	offset     int  // character offset
 	rdOffset   int  // reading offset (position after current character)
 	lineOffset int  // current line offset
-	insertSemi bool // insert a semicolon before next newline
+	insertSemi bool // insert a semicolon before next newline， 在下一行之前插入分号
 
 	// public state - ok to modify
 	ErrorCount int // number of errors encountered
@@ -56,16 +57,18 @@ const bom = 0xFEFF // byte order mark, only permitted as very first character
 func (s *Scanner) next() {
 	if s.rdOffset < len(s.src) {
 		s.offset = s.rdOffset
-		if s.ch == '\n' {
+		if s.ch == '\n' {// 换行
 			s.lineOffset = s.offset
 			s.file.AddLine(s.offset)
 		}
+		// 符号，递增多少个字节， int32 可以表示 utf8 的字符
 		r, w := rune(s.src[s.rdOffset]), 1
 		switch {
 		case r == 0:
 			s.error(s.offset, "illegal character NUL")
 		case r >= utf8.RuneSelf:
 			// not ASCII
+			// 解析 utf8字符
 			r, w = utf8.DecodeRune(s.src[s.rdOffset:])
 			if r == utf8.RuneError && w == 1 {
 				s.error(s.offset, "illegal UTF-8 encoding")
@@ -110,6 +113,7 @@ const (
 // Note that Init may call err if there is an error in the first character
 // of the file.
 //
+// Init 初始化扫描器 s ,
 func (s *Scanner) Init(file *token.File, src []byte, err ErrorHandler, mode Mode) {
 	// Explicitly initialize all fields since a scanner may be reused.
 	if file.Size() != len(src) {
@@ -369,6 +373,7 @@ func (s *Scanner) scanNumber(seenDecimalPoint bool) (token.Token, string) {
 		offs := s.offset
 		s.next()
 		if s.ch == 'x' || s.ch == 'X' {
+			// 16 进制数值
 			// hexadecimal int
 			s.next()
 			s.scanMantissa(16)
@@ -377,6 +382,7 @@ func (s *Scanner) scanNumber(seenDecimalPoint bool) (token.Token, string) {
 				s.error(offs, "illegal hexadecimal number")
 			}
 		} else {
+			// 8 进制数值
 			// octal int or float
 			seenDecimalDigit := false
 			s.scanMantissa(8)
@@ -397,8 +403,10 @@ func (s *Scanner) scanNumber(seenDecimalPoint bool) (token.Token, string) {
 	}
 
 	// decimal int or float
+	// 扫描尾数
 	s.scanMantissa(10)
 
+	// 浮点数
 fraction:
 	if s.ch == '.' {
 		tok = token.FLOAT
@@ -406,6 +414,7 @@ fraction:
 		s.scanMantissa(10)
 	}
 
+	// 指数
 exponent:
 	if s.ch == 'e' || s.ch == 'E' {
 		tok = token.FLOAT
@@ -544,6 +553,7 @@ func (s *Scanner) scanString() string {
 	return string(s.src[offs:s.offset])
 }
 
+//
 func stripCR(b []byte, comment bool) []byte {
 	c := make([]byte, len(b))
 	i := 0
@@ -590,7 +600,7 @@ func (s *Scanner) scanRawString() string {
 }
 
 func (s *Scanner) skipWhitespace() {
-	for s.ch == ' ' || s.ch == '\t' || s.ch == '\n' && !s.insertSemi || s.ch == '\r' {
+	for s.ch == ' ' || s.ch == '\t' || (s.ch == '\n' && !s.insertSemi) || s.ch == '\r' {
 		s.next()
 	}
 }
@@ -668,6 +678,7 @@ func (s *Scanner) switch4(tok0, tok1 token.Token, ch2 rune, tok2, tok3 token.Tok
 // set with Init. Token positions are relative to that file
 // and thus relative to the file set.
 //
+// 开始扫描，做分词
 func (s *Scanner) Scan() (pos token.Pos, tok token.Token, lit string) {
 scanAgain:
 	s.skipWhitespace()
@@ -679,7 +690,9 @@ scanAgain:
 	insertSemi := false
 	switch ch := s.ch; {
 	case isLetter(ch):
+		// 扫描标识，例如函数名称
 		lit = s.scanIdentifier()
+		// 这个只是多做了一个判定，
 		if len(lit) > 1 {
 			// keywords are longer than one letter - avoid lookup otherwise
 			tok = token.Lookup(lit)
@@ -689,7 +702,7 @@ scanAgain:
 			}
 		} else {
 			insertSemi = true
-			tok = token.IDENT
+			tok = token.IDENT // 函数名
 		}
 	case '0' <= ch && ch <= '9':
 		insertSemi = true
@@ -702,6 +715,7 @@ scanAgain:
 				s.insertSemi = false // EOF consumed
 				return pos, token.SEMICOLON, "\n"
 			}
+			// 结束
 			tok = token.EOF
 		case '\n':
 			// we only reach here if s.insertSemi was
@@ -710,18 +724,23 @@ scanAgain:
 			s.insertSemi = false // newline consumed
 			return pos, token.SEMICOLON, "\n"
 		case '"':
+			// 扫描字符串
 			insertSemi = true
 			tok = token.STRING
 			lit = s.scanString()
 		case '\'':
+			// 扫描 utf-8 字符
 			insertSemi = true
 			tok = token.CHAR
 			lit = s.scanRune()
 		case '`':
+			// 多行字符串
 			insertSemi = true
 			tok = token.STRING
+			//
 			lit = s.scanRawString()
 		case ':':
+			//                      :         :=
 			tok = s.switch2(token.COLON, token.DEFINE)
 		case '.':
 			if '0' <= s.ch && s.ch <= '9' {
@@ -788,33 +807,42 @@ scanAgain:
 				tok = token.COMMENT
 				lit = comment
 			} else {
+				//                   /            /=
 				tok = s.switch2(token.QUO, token.QUO_ASSIGN)
 			}
 		case '%':
+			//                     %         %=
 			tok = s.switch2(token.REM, token.REM_ASSIGN)
 		case '^':
+			//                    ^           ^=
 			tok = s.switch2(token.XOR, token.XOR_ASSIGN)
 		case '<':
 			if s.ch == '-' {
 				s.next()
 				tok = token.ARROW
 			} else {
+				//                      <        <=          <          <<          <<=
 				tok = s.switch4(token.LSS, token.LEQ, '<', token.SHL, token.SHL_ASSIGN)
 			}
 		case '>':
+			//                    >           >=         >        >>             >>=
 			tok = s.switch4(token.GTR, token.GEQ, '>', token.SHR, token.SHR_ASSIGN)
 		case '=':
+			//                    =            ==
 			tok = s.switch2(token.ASSIGN, token.EQL)
 		case '!':
+			//                    !          !=
 			tok = s.switch2(token.NOT, token.NEQ)
 		case '&':
 			if s.ch == '^' {
 				s.next()
+				//                     &^                 &^=
 				tok = s.switch2(token.AND_NOT, token.AND_NOT_ASSIGN)
 			} else {
 				tok = s.switch3(token.AND, token.AND_ASSIGN, '&', token.LAND)
 			}
 		case '|':
+			//                    |             |=                    ||
 			tok = s.switch3(token.OR, token.OR_ASSIGN, '|', token.LOR)
 		default:
 			// next reports unexpected BOMs - don't repeat

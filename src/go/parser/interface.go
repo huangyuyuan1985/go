@@ -22,6 +22,7 @@ import (
 // otherwise it returns an error. If src == nil, readSource returns
 // the result of reading the file specified by filename.
 //
+//
 func readSource(filename string, src interface{}) ([]byte, error) {
 	if src != nil {
 		switch s := src.(type) {
@@ -49,12 +50,12 @@ func readSource(filename string, src interface{}) ([]byte, error) {
 type Mode uint
 
 const (
-	PackageClauseOnly Mode             = 1 << iota // stop parsing after package clause
-	ImportsOnly                                    // stop parsing after import declarations
-	ParseComments                                  // parse comments and add them to AST
-	Trace                                          // print a trace of parsed productions
-	DeclarationErrors                              // report declaration errors
-	SpuriousErrors                                 // same as AllErrors, for backward-compatibility
+	PackageClauseOnly Mode             = 1 << iota // stop parsing after package clause 1
+	ImportsOnly                                    // stop parsing after import declarations 2
+	ParseComments                                  // parse comments and add them to AST 4
+	Trace                                          // print a trace of parsed productions 8
+	DeclarationErrors                              // report declaration errors  16
+	SpuriousErrors                                 // same as AllErrors, for backward-compatibility  32
 	AllErrors         = SpuriousErrors             // report all errors (not just the first 10 on different lines)
 )
 
@@ -77,12 +78,25 @@ const (
 // representing the fragments of erroneous source code). Multiple errors
 // are returned via a scanner.ErrorList which is sorted by file position.
 //
+/*
+PARSEFILE解析单个GO源文件的源代码，并返回相应的AST.file节点。源代码可以通过源文件的文件名或通过SRC参数提供。
+
+如果SRC！= NIL，PARSEFILE从SRC解析源，文件名仅用于记录位置信息。SRC参数的参数类型必须是String、[]字节或IO.Reader。
+
+如果SRC=＝NIL，PARSEFILE解析文件名指定的文件。
+
+模式参数控制解析的源文本的数量和其他可选的解析器功能。位置信息记录在文件集fSET中，它不能为 nil。
+
+如果无法读取源代码，返回的AST为零，错误指示特定故障。如果读取源但发现语法错误，则结果是部分AST（AST.BAD*节点表示错误源代码的片段）。
+通过文件位置排序的 scanner.ErrorList 返回多个错误。
+ */
 func ParseFile(fset *token.FileSet, filename string, src interface{}, mode Mode) (f *ast.File, err error) {
 	if fset == nil {
 		panic("parser.ParseFile: no token.FileSet provided (fset == nil)")
 	}
 
 	// get source
+	// 读内容
 	text, err := readSource(filename, src)
 	if err != nil {
 		return nil, err
@@ -113,7 +127,12 @@ func ParseFile(fset *token.FileSet, filename string, src interface{}, mode Mode)
 	}()
 
 	// parse source
+	// 初始化内容
+	// 传入空的 fset， 文件名，文件内容，
+
 	p.init(fset, filename, text, mode)
+
+	// 生成 ast.file  抽象语法树，并且返回
 	f = p.parseFile()
 
 	return
@@ -173,6 +192,8 @@ func ParseDir(fset *token.FileSet, path string, filter func(os.FileInfo) bool, m
 // be a valid Go (type or value) expression. Specifically, fset must not
 // be nil.
 //
+// 从字符串开始编译 mode 0
+// 生成 ast 结构体，是一个深度遍历的过程
 func ParseExprFrom(fset *token.FileSet, filename string, src interface{}, mode Mode) (ast.Expr, error) {
 	if fset == nil {
 		panic("parser.ParseExprFrom: no token.FileSet provided (fset == nil)")
@@ -196,15 +217,23 @@ func ParseExprFrom(fset *token.FileSet, filename string, src interface{}, mode M
 		err = p.errors.Err()
 	}()
 
+	// TODO 初始化
 	// parse expr
 	p.init(fset, filename, text, mode)
+
 	// Set up pkg-level scopes to avoid nil-pointer errors.
 	// This is not needed for a correct expression x as the
 	// parser will be ok with a nil topScope, but be cautious
 	// in case of an erroneous x.
+	// 运行层
 	p.openScope()
+	//
 	p.pkgScope = p.topScope
+
+	//
 	e := p.parseRhsOrType()
+
+	// 把运行范围返回上一层
 	p.closeScope()
 	assert(p.topScope == nil, "unbalanced scopes")
 

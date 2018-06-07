@@ -37,18 +37,21 @@ type Node interface {
 	End() token.Pos // position of first character immediately after the node
 }
 
+// 表达式
 // All expression nodes implement the Expr interface.
 type Expr interface {
 	Node
 	exprNode()
 }
 
+// 状态
 // All statement nodes implement the Stmt interface.
 type Stmt interface {
 	Node
 	stmtNode()
 }
 
+// 声明
 // All declaration nodes implement the Decl interface.
 type Decl interface {
 	Node
@@ -91,7 +94,7 @@ func stripTrailingWhitespace(s string) string {
 // Comment markers (//, /*, and */), the first space of a line comment, and
 // leading and trailing empty lines are removed. Multiple empty lines are
 // reduced to one, and trailing space on lines is trimmed. Unless the result
-// is empty, it is newline-terminated.
+// is empty, it is newline-terminated. (换行符结束)
 //
 func (g *CommentGroup) Text() string {
 	if g == nil {
@@ -102,6 +105,7 @@ func (g *CommentGroup) Text() string {
 		comments[i] = c.Text
 	}
 
+	//TODO why
 	lines := make([]string, 0, 10) // most comments are less than 10 lines
 	for _, c := range comments {
 		// Remove comment markers.
@@ -208,6 +212,7 @@ func (f *FieldList) End() token.Pos {
 }
 
 // NumFields returns the number of (named and anonymous fields) in a FieldList.
+// 返回总数量
 func (f *FieldList) NumFields() int {
 	n := 0
 	if f != nil {
@@ -235,6 +240,7 @@ type (
 	}
 
 	// An Ident node represents an identifier.
+	// 标识符
 	Ident struct {
 		NamePos token.Pos // identifier position
 		Name    string    // identifier name
@@ -244,11 +250,14 @@ type (
 	// An Ellipsis node stands for the "..." type in a
 	// parameter list or the "..." length in an array type.
 	//
+	// 省略符
 	Ellipsis struct {
 		Ellipsis token.Pos // position of "..."
 		Elt      Expr      // ellipsis element type (parameter lists only); or nil
 	}
 
+	// 基本
+	// 原意
 	// A BasicLit node represents a literal of basic type.
 	BasicLit struct {
 		ValuePos token.Pos   // literal position
@@ -256,12 +265,14 @@ type (
 		Value    string      // literal string; e.g. 42, 0x7f, 3.14, 1e-9, 2.4i, 'a', '\x7f', "foo" or `\m\n\o`
 	}
 
+	// 函数
 	// A FuncLit node represents a function literal.
 	FuncLit struct {
 		Type *FuncType  // function type
 		Body *BlockStmt // function body
 	}
 
+	// 混合
 	// A CompositeLit node represents a composite literal.
 	CompositeLit struct {
 		Type       Expr      // literal type; or nil
@@ -905,6 +916,9 @@ type (
 	// A GenDecl node (generic declaration node) represents an import,
 	// constant, type or variable declaration. A valid Lparen position
 	// (Lparen.IsValid()) indicates a parenthesized declaration.
+	//
+	// GEDECL节点（泛型声明节点）表示导入，
+	// 常数、类型或变量声明。一个有效的L PAREN位置（LPAREN .ISVALID（））指示括号化声明。
 	//
 	// Relationship between Tok value and Specs element type:
 	//

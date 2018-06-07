@@ -18,10 +18,10 @@ import (
 // A Position is valid if the line number is > 0.
 //
 type Position struct {
-	Filename string // filename, if any
-	Offset   int    // offset, starting at 0
-	Line     int    // line number, starting at 1
-	Column   int    // column number, starting at 1 (byte count)
+	Filename string // filename, if any  文件名
+	Offset   int    // offset, starting at 0，
+	Line     int    // line number, starting at 1， 第几行
+	Column   int    // column number, starting at 1 (byte count)， 这一行的第几个字符
 }
 
 // IsValid reports whether the position is valid.
@@ -433,6 +433,7 @@ func searchFiles(a []*File, x int) int {
 	return sort.Search(len(a), func(i int) bool { return a[i].base > x }) - 1
 }
 
+// 返回 position 所在的file 名称
 func (s *FileSet) file(p Pos) *File {
 	s.mutex.RLock()
 	// common case: p is in last file
