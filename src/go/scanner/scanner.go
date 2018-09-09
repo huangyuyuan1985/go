@@ -619,6 +619,11 @@ func (s *Scanner) switch2(tok0, tok1 token.Token) token.Token {
 	return tok0
 }
 
+/*
+  tok0 ADD
+  tok1 ADD_EQ +=
+  tok2 INCER  ++
+ */
 func (s *Scanner) switch3(tok0, tok1 token.Token, ch2 rune, tok2 token.Token) token.Token {
 	if s.ch == '=' {
 		s.next()
@@ -787,6 +792,8 @@ scanAgain:
 			}
 		case '*':
 			tok = s.switch2(token.MUL, token.MUL_ASSIGN)
+		case '@':
+			tok = token.STRMUL
 		case '/':
 			if s.ch == '/' || s.ch == '*' {
 				// comment

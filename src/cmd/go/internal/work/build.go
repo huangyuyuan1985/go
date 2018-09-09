@@ -281,6 +281,7 @@ func runBuild(cmd *base.Command, args []string) {
 	// 加载 源码
 	pkgs := load.PackagesForBuild(args)
 
+	// 第一个加载的文件夹确认是不是 main
 	if len(pkgs) == 1 && pkgs[0].Name == "main" && cfg.BuildO == "" {
 		_, cfg.BuildO = path.Split(pkgs[0].ImportPath)
 		cfg.BuildO += cfg.ExeSuffix
@@ -329,7 +330,9 @@ func runBuild(cmd *base.Command, args []string) {
 	}
 
 	a := &Action{Mode: "go build"}
+	// deps
 	for _, p := range pkgs {
+		// b.AutoAction 设定 action 函数
 		a.Deps = append(a.Deps, b.AutoAction(ModeBuild, depMode, p))
 	}
 	if cfg.BuildBuildmode == "shared" {

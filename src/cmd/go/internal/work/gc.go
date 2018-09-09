@@ -36,6 +36,8 @@ func (gcToolchain) linker() string {
 	return base.Tool("link")
 }
 
+// 编译函数
+// 核心的函数
 func (gcToolchain) gc(b *Builder, a *Action, archive string, importcfg []byte, asmhdr bool, gofiles []string) (ofile string, output []byte, err error) {
 	p := a.Package
 	objdir := a.Objdir

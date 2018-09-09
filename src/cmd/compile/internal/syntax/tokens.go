@@ -140,6 +140,7 @@ const (
 	AndNot // &^
 	Shl    // <<
 	Shr    // >>
+	StrMul // @
 )
 
 // Operator precedences

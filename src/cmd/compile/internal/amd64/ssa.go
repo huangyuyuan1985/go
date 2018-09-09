@@ -147,6 +147,7 @@ func duff(size int64) (int64, int64) {
 	return off, adj
 }
 
+// 创建
 func ssaGenValue(s *gc.SSAGenState, v *ssa.Value) {
 	switch v.Op {
 	case ssa.OpAMD64ADDQ, ssa.OpAMD64ADDL:

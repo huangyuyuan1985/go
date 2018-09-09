@@ -21,6 +21,7 @@ import (
 	"os"
 )
 
+// 编译器模块
 var archInits = map[string]func(*gc.Arch){
 	"386":      x86.Init,
 	"amd64":    amd64.Init,
@@ -40,6 +41,9 @@ var archInits = map[string]func(*gc.Arch){
 func main() {
 	// disable timestamps for reproducible output
 	log.SetFlags(0)
+
+
+
 	log.SetPrefix("compile: ")
 
 	archInit, ok := archInits[objabi.GOARCH]

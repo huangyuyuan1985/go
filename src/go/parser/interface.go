@@ -131,7 +131,6 @@ func ParseFile(fset *token.FileSet, filename string, src interface{}, mode Mode)
 	// 传入空的 fset， 文件名，文件内容，
 
 	p.init(fset, filename, text, mode)
-
 	// 生成 ast.file  抽象语法树，并且返回
 	f = p.parseFile()
 

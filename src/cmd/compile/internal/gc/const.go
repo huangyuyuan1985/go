@@ -1264,6 +1264,7 @@ func idealkind(n *Node) Ctype {
 		OSUB,
 		OXOR,
 		OOR,
+		OSTRMUL,
 		OPLUS:
 		k1 := idealkind(n.Left)
 

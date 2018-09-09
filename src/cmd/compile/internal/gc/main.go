@@ -127,6 +127,7 @@ var nowritebarrierrecCheck *nowritebarrierrecChecker
 // Main parses flags and Go source files specified in the command-line
 // arguments, type-checks the parsed Go package, compiles functions to machine
 // code, and finally writes the compiled package definition to disk.
+//
 func Main(archInit func(*Arch)) {
 	timings.Start("fe", "init")
 

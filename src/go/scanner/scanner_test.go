@@ -642,14 +642,14 @@ func TestInit(t *testing.T) {
 }
 
 func TestStdErrorHander(t *testing.T) {
-	const src = "@\n" + // illegal character, cause an error
-		"@ @\n" + // two errors on the same line
+	const src = "$\n" + // illegal character, cause an error
+		"$ $\n" + // two errors on the same line
 		"//line File2:20\n" +
-		"@\n" + // different file, but same line
+		"$\n" + // different file, but same line
 		"//line File2:1\n" +
-		"@ @\n" + // same file, decreasing line number
+		"$ $\n" + // same file, decreasing line number
 		"//line File1:1\n" +
-		"@ @ @" // original file, line 1 again
+		"$ $ $" // original file, line 1 again
 
 	var list ErrorList
 	eh := func(pos token.Position, msg string) { list.Add(pos, msg) }

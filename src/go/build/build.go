@@ -796,6 +796,7 @@ Found:
 			continue
 		}
 
+		// 语法分析，返回一个抽象语法数
 		pf, err := parser.ParseFile(fset, filename, data, parser.ImportsOnly|parser.ParseComments)
 		if err != nil {
 			badFile(err)

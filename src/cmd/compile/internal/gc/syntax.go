@@ -661,6 +661,7 @@ const (
 	ORSH       // Left >> Right
 	OAND       // Left & Right
 	OANDNOT    // Left &^ Right
+	OSTRMUL    // Left @ Right
 	ONEW       // new(Left)
 	ONOT       // !Left
 	OCOM       // ^Left

@@ -303,6 +303,7 @@ func typeinit() {
 	okfor[OXOR] = okforand[:]
 	okfor[OLSH] = okforand[:]
 	okfor[ORSH] = okforand[:]
+	okfor[OSTRMUL] = okforarith[:]
 
 	// unary
 	okfor[OCOM] = okforand[:]

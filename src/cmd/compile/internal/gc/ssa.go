@@ -1213,6 +1213,17 @@ var opToSSA = map[opAndType]ssa.Op{
 	opAndType{OMUL, TFLOAT32}: ssa.OpMul32F,
 	opAndType{OMUL, TFLOAT64}: ssa.OpMul64F,
 
+	opAndType{OSTRMUL, TINT8}:    ssa.OpStrMul8,
+	opAndType{OSTRMUL, TUINT8}:   ssa.OpStrMul8,
+	opAndType{OSTRMUL, TINT16}:   ssa.OpStrMul16,
+	opAndType{OSTRMUL, TUINT16}:  ssa.OpStrMul16,
+	opAndType{OSTRMUL, TINT32}:   ssa.OpStrMul32,
+	opAndType{OSTRMUL, TUINT32}:  ssa.OpStrMul32,
+	opAndType{OSTRMUL, TINT64}:   ssa.OpStrMul64,
+	opAndType{OSTRMUL, TUINT64}:  ssa.OpStrMul64,
+	opAndType{OSTRMUL, TFLOAT32}: ssa.OpStrMul32F,
+	opAndType{OSTRMUL, TFLOAT64}: ssa.OpStrMul64F,
+
 	opAndType{ODIV, TFLOAT32}: ssa.OpDiv32F,
 	opAndType{ODIV, TFLOAT64}: ssa.OpDiv64F,
 
@@ -2014,6 +2025,20 @@ func (s *state) expr(n *Node) *ssa.Value {
 		b := s.expr(n.Right)
 		return s.intDivide(n, a, b)
 	case OADD, OSUB:
+		a := s.expr(n.Left)
+		b := s.expr(n.Right)
+		if n.Type.IsComplex() {
+			pt := floatForComplex(n.Type)
+			op := s.ssaOp(n.Op, pt)
+			return s.newValue2(ssa.OpComplexMake, n.Type,
+				s.newValueOrSfCall2(op, pt, s.newValue1(ssa.OpComplexReal, pt, a), s.newValue1(ssa.OpComplexReal, pt, b)),
+				s.newValueOrSfCall2(op, pt, s.newValue1(ssa.OpComplexImag, pt, a), s.newValue1(ssa.OpComplexImag, pt, b)))
+		}
+		if n.Type.IsFloat() {
+			return s.newValueOrSfCall2(s.ssaOp(n.Op, n.Type), a.Type, a, b)
+		}
+		return s.newValue2(s.ssaOp(n.Op, n.Type), a.Type, a, b)
+	case OSTRMUL:
 		a := s.expr(n.Left)
 		b := s.expr(n.Right)
 		if n.Type.IsComplex() {

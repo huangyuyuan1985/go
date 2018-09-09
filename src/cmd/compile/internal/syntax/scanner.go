@@ -218,6 +218,11 @@ redo:
 		c = s.getr()
 		goto assignop
 
+	case '@':
+		s.op, s.prec = StrMul, precMul
+		c = s.getr()
+		goto assignop
+
 	case '&':
 		c = s.getr()
 		if c == '&' {

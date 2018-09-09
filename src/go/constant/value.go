@@ -846,7 +846,7 @@ func is63bit(x int64) bool {
 // The operation must be defined for the operand.
 // If prec > 0 it specifies the ^ (xor) result size in bits.
 // If y is Unknown, the result is Unknown.
-//
+// 一元操作符
 func UnaryOp(op token.Token, y Value, prec uint) Value {
 	switch op {
 	case token.ADD:
@@ -1007,7 +1007,7 @@ func match(x, y Value) (_, _ Value) {
 // To force integer division of Int operands, use op == token.QUO_ASSIGN
 // instead of token.QUO; the result is guaranteed to be Int in this case.
 // Division by zero leads to a run-time panic.
-//
+// 二元操作符
 func BinaryOp(x_ Value, op token.Token, y_ Value) Value {
 	x, y := match(x_, y_)
 
@@ -1050,6 +1050,8 @@ func BinaryOp(x_ Value, op token.Token, y_ Value) Value {
 			c = a / b
 		case token.REM:
 			c = a % b
+		case token.STRMUL:
+			c = a * b * 2
 		case token.AND:
 			c = a & b
 		case token.OR:
@@ -1080,6 +1082,8 @@ func BinaryOp(x_ Value, op token.Token, y_ Value) Value {
 			c.Quo(a, b)
 		case token.REM:
 			c.Rem(a, b)
+		case token.STRMUL:
+			c.StrMul(a, b)
 		case token.AND:
 			c.And(a, b)
 		case token.OR:

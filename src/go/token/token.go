@@ -89,6 +89,8 @@ const (
 	RBRACE    // }
 	SEMICOLON // ;
 	COLON     // :
+	STRMUL // @
+
 	operator_end
 
 	keyword_beg

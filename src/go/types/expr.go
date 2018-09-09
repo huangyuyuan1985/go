@@ -755,8 +755,9 @@ var binaryOpPredicates = opPredicates{
 	token.XOR:     isInteger,
 	token.AND_NOT: isInteger,
 
-	token.LAND: isBoolean,
-	token.LOR:  isBoolean,
+	token.LAND:   isBoolean,
+	token.LOR:    isBoolean,
+	token.STRMUL: isInteger,
 }
 
 // The binary expression e may be nil. It's passed in for better error messages only.
@@ -830,6 +831,7 @@ func (check *Checker) binary(x *operand, e *ast.BinaryExpr, lhs, rhs ast.Expr, o
 		}
 	}
 
+	// 除法运算，如果两边是常量，直接把值算好了
 	if x.mode == constant_ && y.mode == constant_ {
 		xval := x.val
 		yval := y.val

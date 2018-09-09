@@ -72,9 +72,9 @@ func (b *Builder) Do(root *Action) {
 	// ensure that, all else being equal, the execution prefers
 	// to do what it would have done first in a simple depth-first
 	// dependency order traversal.
-	// 构建所有操作的列表，分配深度优先的后订单优先级。
+	// 构建所有操作的列表，分配深度优先的 后序 优先级。
 	// 这里最初的实现是一个真正的队列（使用一个通道），但是它的作用是通过低级别的叶动作分散注意力，从而不利于完成更高级别的操作。
-	// 工作的顺序对整个执行时间并不重要，但是当运行“GO测试STD”时，很快就可以看到每一个测试结果。
+	// 工作的顺序对整个执行时间并不重要，但是当运行“go test std”时，很快就可以看到每一个测试结果。
 	// 所分配的优先级确保，在所有相同的情况下，执行优先于在简单的深度优先依赖顺序遍历中完成它所做的事情。
 	all := actionList(root)
 	for i, a := range all {
@@ -91,6 +91,7 @@ func (b *Builder) Do(root *Action) {
 
 	b.readySema = make(chan bool, len(all))
 
+	// 处理依赖关系
 	// Initialize per-action execution state.
 	for _, a := range all {
 		for _, a1 := range a.Deps {
@@ -547,6 +548,7 @@ func (b *Builder) build(a *Action) (err error) {
 
 	// Compile Go.
 	objpkg := objdir + "_pkg_.a"
+	//
 	ofile, out, err := BuildToolchain.gc(b, a, objpkg, icfg.Bytes(), len(sfiles) > 0, gofiles)
 	if len(out) > 0 {
 		b.showOutput(a, a.Package.Dir, a.Package.Desc(), b.processOutput(out))

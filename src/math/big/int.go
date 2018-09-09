@@ -216,6 +216,12 @@ func (z *Int) Rem(x, y *Int) *Int {
 	return z
 }
 
+func (z *Int) StrMul(x, y *Int) *Int {
+	z.abs = z.abs.mul(z.abs.mul(x.abs, y.abs), natTwo) // * 2
+	z.neg = len(x.abs) != 0 && x.neg != y.neg
+	return z
+}
+
 // QuoRem sets z to the quotient x/y and r to the remainder x%y
 // and returns the pair (z, r) for y != 0.
 // If y == 0, a division-by-zero run-time panic occurs.

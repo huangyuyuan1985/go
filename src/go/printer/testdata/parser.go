@@ -1291,6 +1291,7 @@ L:
 }
 
 // If lhs is set and the result is an identifier, it is not resolved.
+// 解析一元表达式
 func (p *parser) parseUnaryExpr(lhs bool) ast.Expr {
 	if p.trace {
 		defer un(trace(p, "UnaryExpr"))

@@ -528,6 +528,7 @@ func typecheck1(n *Node, top int) *Node {
 		OOR,
 		OOROR,
 		OSUB,
+		OSTRMUL,
 		OXOR:
 		var l *Node
 		var op Op
@@ -617,7 +618,7 @@ func typecheck1(n *Node, top int) *Node {
 				aop = assignop(l.Type, r.Type, nil)
 				if aop != 0 {
 					if r.Type.IsInterface() && !l.Type.IsInterface() && !IsComparable(l.Type) {
-						yyerror("invalid operation: %v (operator %v not defined on %s)", n, op, typekind(l.Type))
+						yyerror("left invalid operation: %v (operator %v not defined on %s)", n, op, typekind(l.Type))
 						n.Type = nil
 						return n
 					}
@@ -639,7 +640,7 @@ func typecheck1(n *Node, top int) *Node {
 				aop = assignop(r.Type, l.Type, nil)
 				if aop != 0 {
 					if l.Type.IsInterface() && !r.Type.IsInterface() && !IsComparable(r.Type) {
-						yyerror("invalid operation: %v (operator %v not defined on %s)", n, op, typekind(r.Type))
+						yyerror("right invalid operation: %v (operator %v not defined on %s)", n, op, typekind(r.Type))
 						n.Type = nil
 						return n
 					}
@@ -669,7 +670,7 @@ func typecheck1(n *Node, top int) *Node {
 		}
 
 		if !okfor[op][et] {
-			yyerror("invalid operation: %v (operator %v not defined on %s)", n, op, typekind(t))
+			yyerror("okfor invalid operation: %v (operator %v not defined on %s)", n, op, typekind(t))
 			n.Type = nil
 			return n
 		}

@@ -320,6 +320,7 @@ func (b *Builder) AutoAction(mode, depMode BuildMode, p *load.Package) *Action {
 // for building packages (archives), never for linking executables.
 // depMode is the action (build or install) to use when building dependencies.
 // To turn package main into an executable, call b.Link instead.
+// CompileAction 返回
 func (b *Builder) CompileAction(mode, depMode BuildMode, p *load.Package) *Action {
 	if mode != ModeBuild && p.Internal.Local && p.Target == "" {
 		// Imported via local path. No permanent target.
@@ -432,6 +433,8 @@ func (b *Builder) LinkAction(mode, depMode BuildMode, p *load.Package) *Action {
 		// in an otherwise empty subdirectory named exe to avoid
 		// naming conflicts. The only possible conflict is if we were
 		// to create a top-level package named exe.
+		// 一个可运行的文件（这是一个临时文件的名称）
+		//
 		name := "a.out"
 		if p.Internal.ExeName != "" {
 			name = p.Internal.ExeName

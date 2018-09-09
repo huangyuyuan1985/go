@@ -28,7 +28,6 @@ func exportFilter(name string) bool {
 func FileExports(src *File) bool {
 	return filterFile(src, exportFilter, true)
 }
-rr
 // PackageExports trims the AST for a Go package in place such that
 // only exported nodes remain. The pkg.Files list is not changed, so that
 // file names and top-level package comments don't get lost.
